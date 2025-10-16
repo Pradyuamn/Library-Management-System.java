@@ -1,0 +1,125 @@
+import java.sql.*;
+import java.util.Scanner;
+
+public class JdbcLibraryDemo {
+
+    public static void main(String[] args) {
+
+        String url = "jdbc:mysql://localhost:3306/librarydb";
+        String user = "root";   // your MySQL username
+        String pass = "your_password";  // your MySQL password
+
+        Scanner sc = new Scanner(System.in);
+
+        try {
+            // Load Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Connect
+            Connection con = DriverManager.getConnection(url, user, pass);
+            System.out.println("✅ Connected to Library Database!");
+
+            while (true) {
+                System.out.println("\n=== Library Menu ===");
+                System.out.println("1. Add Book");
+                System.out.println("2. View Books");
+                System.out.println("3. Update Book");
+                System.out.println("4. Delete Book");
+                System.out.println("5. Exit");
+                System.out.print("Enter choice: ");
+                int choice = sc.nextInt();
+
+                switch (choice) {
+
+                    case 1:
+                        // ➕ ADD Book
+                        System.out.print("Enter Book ID: ");
+                        int id = sc.nextInt();
+                        sc.nextLine();
+                        System.out.print("Enter Book Title: ");
+                        String title = sc.nextLine();
+                        System.out.print("Enter Author: ");
+                        String author = sc.nextLine();
+                        System.out.print("Enter Price: ");
+                        double price = sc.nextDouble();
+
+                        String insert = "INSERT INTO books VALUES (?, ?, ?, ?)";
+                        PreparedStatement psInsert = con.prepareStatement(insert);
+                        psInsert.setInt(1, id);
+                        psInsert.setString(2, title);
+                        psInsert.setString(3, author);
+                        psInsert.setDouble(4, price);
+                        int rows = psInsert.executeUpdate();
+                        System.out.println(rows + " book added successfully!");
+                        psInsert.close();
+                        break;
+
+                    case 2:
+                        // 📚 VIEW Books
+                        Statement st = con.createStatement();
+                        ResultSet rs = st.executeQuery("SELECT * FROM books");
+
+                        System.out.println("\nID\tTitle\t\tAuthor\t\tPrice");
+                        System.out.println("---------------------------------------------");
+                        while (rs.next()) {
+                            System.out.println(rs.getInt("id") + "\t" +
+                                    rs.getString("title") + "\t" +
+                                    rs.getString("author") + "\t" +
+                                    rs.getDouble("price"));
+                        }
+                        rs.close();
+                        st.close();
+                        break;
+
+                    case 3:
+                        // ✏️ UPDATE Book
+                        System.out.print("Enter Book ID to update: ");
+                        int uid = sc.nextInt();
+                        sc.nextLine();
+                        System.out.print("Enter new Title: ");
+                        String newTitle = sc.nextLine();
+                        System.out.print("Enter new Author: ");
+                        String newAuthor = sc.nextLine();
+                        System.out.print("Enter new Price: ");
+                        double newPrice = sc.nextDouble();
+
+                        String update = "UPDATE books SET title=?, author=?, price=? WHERE id=?";
+                        PreparedStatement psUpdate = con.prepareStatement(update);
+                        psUpdate.setString(1, newTitle);
+                        psUpdate.setString(2, newAuthor);
+                        psUpdate.setDouble(3, newPrice);
+                        psUpdate.setInt(4, uid);
+                        int upd = psUpdate.executeUpdate();
+                        System.out.println(upd + " book updated successfully!");
+                        psUpdate.close();
+                        break;
+
+                    case 4:
+                        // ❌ DELETE Book
+                        System.out.print("Enter Book ID to delete: ");
+                        int did = sc.nextInt();
+
+                        String delete = "DELETE FROM books WHERE id=?";
+                        PreparedStatement psDelete = con.prepareStatement(delete);
+                        psDelete.setInt(1, did);
+                        int del = psDelete.executeUpdate();
+                        System.out.println(del + " book deleted successfully!");
+                        psDelete.close();
+                        break;
+
+                    case 5:
+                        System.out.println("👋 Exiting... Goodbye!");
+                        con.close();
+                        sc.close();
+                        System.exit(0);
+
+                    default:
+                        System.out.println("❌ Invalid choice, please try again.");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
